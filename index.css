@@ -46,3 +46,26 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ==========================================================================
+   12. Accessibility-First Design
+   ========================================================================== */
+
+/* Уважение к настройкам пользователя для уменьшения анимаций */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Красивое и заметное состояние фокуса для навигации с клавиатуры */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary-hsl) / 0.8);
+  outline-offset: 2px;
+  border-radius: var(--radius-input);
+}

@@ -144,17 +144,20 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ data, onBookAppointmen
         <div className="live-preview-body">
             <header
               id="home"
-              className="relative h-screen min-h-[600px] flex items-center justify-center text-center text-white p-4 bg-cover bg-center"
+              className="relative h-screen min-h-[600px] flex items-center justify-center text-center text-white p-4 bg-cover bg-center overflow-hidden"
               style={{
                 backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('${hero.backgroundImage}')`,
               }}
             >
+              <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-primary/20 rounded-full filter blur-3xl opacity-50 animate-pulse"></div>
+              <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-yellow-400/20 rounded-full filter blur-3xl opacity-50 animate-pulse animation-delay-4000"></div>
+
               <div className="container mx-auto px-4 z-10" data-aos="fade-in">
                 <h1 className="text-5xl md:text-7xl font-bold mb-4 drop-shadow-lg">{hero.title}</h1>
                 <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto drop-shadow-md font-light">{hero.subtitle}</p>
                 <a
                   href="#booking"
-                  className="py-3 px-10 text-lg font-semibold rounded-full transition-all duration-300 ease-in-out hover:scale-105 shadow-elegant inline-block"
+                  className="py-3 px-10 text-lg font-semibold rounded-full transition-all duration-500 ease-bounce hover:scale-105 shadow-elegant hover:shadow-glow inline-block"
                   style={{ backgroundColor: 'var(--theme-primary)', color: 'white' }}
                 >
                   {hero.cta}
@@ -162,8 +165,9 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ data, onBookAppointmen
               </div>
             </header>
 
-            <section id="about" style={{ backgroundColor: 'var(--theme-background)', color: 'var(--theme-text)' }} className="py-20 sm:py-32">
-              <div className="container mx-auto px-4">
+            <section id="about" style={{ backgroundColor: 'var(--theme-background)', color: 'var(--theme-text)' }} className="py-20 sm:py-32 relative overflow-hidden">
+              <div className="absolute top-0 right-0 -translate-y-1/3 translate-x-1/3 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-70"></div>
+              <div className="container mx-auto px-4 z-10 relative">
                 <div className="grid md:grid-cols-2 gap-12 md:gap-24 items-center" data-aos="fade-up">
                   <div>
                     <img src={about.imageUrl} alt="Мастер" className="rounded-card shadow-card-hover w-full h-auto object-cover aspect-[4/5]" />
@@ -181,7 +185,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ data, onBookAppointmen
                     <h2 className="text-4xl sm:text-5xl font-bold text-center mb-16" style={{ color: 'var(--theme-primary)' }} data-aos="fade-up">Услуги</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                         {services.map((service, index) => (
-                            <div key={service.id} className="p-8 rounded-card shadow-card transition-all duration-300 ease-smooth hover:shadow-card-hover hover:-translate-y-2" style={{ backgroundColor: 'var(--theme-background)' }} data-aos="fade-up" data-aos-delay={index * 100}>
+                            <div key={service.id} className="p-8 rounded-card shadow-card transition-all duration-500 ease-smooth hover:shadow-card-hover hover:-translate-y-2" style={{ backgroundColor: 'var(--theme-background)' }} data-aos="fade-up" data-aos-delay={index * 100}>
                                 <h3 className="text-2xl font-bold mb-3">{service.name}</h3>
                                 <p className="text-text-secondary mb-5">{service.description}</p>
                                 <div className="flex justify-between items-center text-xl font-semibold">
@@ -272,7 +276,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ data, onBookAppointmen
                                         <input type="time" id="time" value={bookingDetails.time} onChange={handleBookingChange} className="w-full px-4 py-3 bg-background border border-border rounded-input shadow-input focus:ring-2 focus:ring-primary/50 focus:border-primary text-base transition-all duration-300 ease-smooth" required />
                                     </div>
                                 </div>
-                                <button type="submit" className="w-full py-4 px-4 text-lg font-semibold rounded-component text-white transition-all duration-300 ease-smooth shadow-elegant hover:scale-105" style={{ backgroundColor: 'var(--theme-primary)' }}>
+                                <button type="submit" className="w-full py-4 px-4 text-lg font-semibold rounded-component text-white transition-all duration-500 ease-bounce shadow-elegant hover:scale-105 hover:shadow-glow" style={{ backgroundColor: 'var(--theme-primary)' }}>
                                     Записаться
                                 </button>
                             </form>

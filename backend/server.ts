@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import * as crypto from 'crypto';
 
@@ -154,12 +154,12 @@ let siteData: LandingPageData = getInitialData();
 // --- API Endpoints ---
 
 // GET /api/data - Retrieve current site data
-app.get('/api/data', (req: express.Request, res: express.Response) => {
+app.get('/api/data', (req: Request, res: Response) => {
   res.json(siteData);
 });
 
 // PUT /api/data - Update site data
-app.put('/api/data', (req: express.Request, res: express.Response) => {
+app.put('/api/data', (req: Request, res: Response) => {
   const newData = req.body as LandingPageData;
   // Basic validation could be added here
   if (!newData || !newData.hero || !newData.services) {
@@ -171,7 +171,7 @@ app.put('/api/data', (req: express.Request, res: express.Response) => {
 });
 
 // POST /api/reset - Reset data to initial state
-app.post('/api/reset', (req: express.Request, res: express.Response) => {
+app.post('/api/reset', (req: Request, res: Response) => {
   siteData = getInitialData();
   console.log('Data has been reset to initial state.');
   res.json(siteData);
