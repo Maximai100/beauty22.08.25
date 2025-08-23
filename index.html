@@ -2,10 +2,58 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+    <!-- START: Cache-control meta tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <!-- END: Cache-control meta tags -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Конструктор сайтов для бьюти-мастеров</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="/index.css?v=1.5.2">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              heading: ['Playfair Display', 'serif'],
+              body: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              primary: 'hsl(var(--primary-hsl) / <alpha-value>)',
+              'primary-focus': 'hsl(var(--primary-focus-hsl) / <alpha-value>)',
+              background: 'hsl(var(--background-hsl) / <alpha-value>)',
+              card: 'hsl(var(--card-hsl) / <alpha-value>)',
+              'text-primary': 'hsl(var(--text-primary-hsl) / <alpha-value>)',
+              'text-secondary': 'hsl(var(--text-secondary-hsl) / <alpha-value>)',
+              border: 'hsl(var(--border-hsl) / <alpha-value>)',
+              success: 'hsl(var(--success-hsl) / <alpha-value>)',
+              error: 'hsl(var(--error-hsl) / <alpha-value>)',
+            },
+            boxShadow: {
+              'input': '0 1px 2px 0 hsl(var(--shadow-color) / 0.05)',
+              'card': '0 4px 6px -1px hsl(var(--shadow-color) / 0.1), 0 2px 4px -2px hsl(var(--shadow-color) / 0.1)',
+              'card-hover': '0 10px 15px -3px hsl(var(--shadow-color) / 0.1), 0 4px 6px -4px hsl(var(--shadow-color) / 0.1)',
+              'elegant': '0 10px 40px -10px hsl(var(--primary-hsl) / 0.25)',
+            },
+            borderRadius: {
+              'component': 'var(--radius-component)',
+              'card': 'var(--radius-card)',
+              'input': 'var(--radius-input)',
+            },
+            transitionTimingFunction: {
+             'smooth': 'var(--transition-timing-smooth)',
+            }
+          }
+        }
+      }
+    </script>
   <script type="importmap">
 {
   "imports": {
@@ -14,13 +62,14 @@
     "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
     "@google/genai": "https://esm.sh/@google/genai",
     "express": "https://esm.sh/express@^5.1.0",
-    "cors": "https://esm.sh/cors@^2.8.5"
+    "cors": "https://esm.sh/cors@^2.8.5",
+    "crypto": "https://esm.sh/crypto@^1.0.1"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="/index.tsx?v=1.5.2"></script>
   </body>
 </html>

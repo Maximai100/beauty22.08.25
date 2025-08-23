@@ -1,88 +1,86 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { BuilderSidebar } from './components/BuilderSidebar';
 import { LivePreview } from './components/LivePreview';
-import type { LandingPageData, Service, PortfolioImage, Appointment, Client, ContactData, SocialData, Testimonial } from './types';
+import type { LandingPageData, Service, PortfolioImage, Appointment, Client, ContactData, SocialData, Testimonial, HeroData, AboutData } from './types';
 import { INITIAL_DATA } from './constants';
 import { ToastContainer, Toast } from './components/Toast';
 
-const APP_STORAGE_KEY = 'beauty-landing-builder-data';
+const BACKEND_URL = ''; // Используем относительные пути для API запросов
 
-const loadStateFromLocalStorage = (): LandingPageData | null => {
-  try {
-    const serializedState = localStorage.getItem(APP_STORAGE_KEY);
-    if (serializedState === null) {
-      return null;
-    }
-    const storedData = JSON.parse(serializedState);
-    return {
-      ...INITIAL_DATA,
-      ...storedData,
-      hero: { ...INITIAL_DATA.hero, ...storedData.hero },
-      theme: { ...INITIAL_DATA.theme, ...storedData.theme },
-      contact: { ...INITIAL_DATA.contact, ...storedData.contact },
-      socials: { ...INITIAL_DATA.socials, ...storedData.socials },
-    };
-  } catch (err) {
-    console.warn("Could not load state from localStorage:", err);
-    return null;
-  }
-};
+type ToastType = 'success' | 'error';
 
 const App: React.FC = () => {
   const [data, setData] = useState<LandingPageData | null>(null);
-  const [toasts, setToasts] = useState<{ id: number; message: string }[]>([]);
-  
-  // Effect for initial data loading
-  useEffect(() => {
-    const localData = loadStateFromLocalStorage();
-    if (localData) {
-      setData(localData);
-    } else {
-      // Fetch from backend if no local data
-      fetch('http://localhost:3001/api/initial-data')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(initialDataFromServer => {
-          setData(initialDataFromServer);
-        })
-        .catch(error => {
-          console.error("Failed to fetch initial data from server, using local constants:", error);
-          setData(INITIAL_DATA); // Fallback to local constants
-        });
-    }
-  }, []);
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: ToastType }[]>([]);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Effect for saving data to localStorage
-  useEffect(() => {
-    if (data) {
-        try {
-          const serializedState = JSON.stringify(data);
-          localStorage.setItem(APP_STORAGE_KEY, serializedState);
-        } catch(err) {
-          console.error("Could not save state to localStorage:", err);
-        }
-    }
-  }, [data]);
-
-  const addToast = useCallback((message: string) => {
+  const addToast = useCallback((message: string, type: ToastType = 'success') => {
     const id = Date.now();
-    setToasts(prevToasts => [...prevToasts, { id, message }]);
+    setToasts(prevToasts => [...prevToasts, { id, message, type }]);
     setTimeout(() => {
       setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
-    }, 3000);
+    }, 5000); // Увеличено время отображения для ошибок
   }, []);
+
+  // Effect for initial data loading from server
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/data`);
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
+        }
+        const serverData = await response.json();
+        setData(serverData);
+      } catch (error) {
+        console.error("Could not fetch data from server, using initial data.", error);
+        setData(INITIAL_DATA);
+        const errorMessage = error instanceof Error ? error.message : 'Неизвестная сетевая ошибка.';
+        addToast(`Ошибка загрузки: ${errorMessage} Используются данные по умолчанию.`, 'error');
+      } finally {
+        setIsInitialLoad(false);
+      }
+    };
+    fetchData();
+  }, [addToast]);
+
+  // Effect for saving data to server
+  useEffect(() => {
+    if (isInitialLoad || !data) {
+        return;
+    }
+    
+    const handler = setTimeout(async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/data`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+          throw new Error(`Server responded with an error: ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+          console.error("Could not save data to server:", error);
+          const errorMessage = error instanceof Error ? error.message : 'Неизвестная сетевая ошибка.';
+          addToast(`Ошибка сохранения: ${errorMessage}`, 'error');
+      }
+    }, 1000); // Debounce save requests
+
+    return () => {
+        clearTimeout(handler);
+    };
+  }, [data, isInitialLoad, addToast]);
+
   
   if (!data) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-gray-100">
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="text-center">
-          <svg className="mx-auto h-12 w-12 animate-spin text-fuchsia-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <h2 className="mt-4 text-xl font-semibold text-gray-700">Загрузка конструктора...</h2>
+          <svg className="mx-auto h-12 w-12 animate-spin text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <h2 className="mt-4 text-xl font-semibold text-text-primary font-heading">Загрузка конструктора...</h2>
         </div>
       </div>
     );
@@ -92,12 +90,12 @@ const App: React.FC = () => {
     setData(prevData => prevData ? { ...prevData, [key]: value } : null);
   };
 
-  const updateHero = (field: 'title' | 'subtitle' | 'cta', value: string) => {
+  const updateHero = (field: keyof HeroData, value: string) => {
     if (!data) return;
     updateData('hero', { ...data.hero, [field]: value });
   };
 
-  const updateAbout = (value: string) => {
+  const updateAbout = (value: AboutData) => {
     updateData('about', value);
   };
   
@@ -129,11 +127,18 @@ const App: React.FC = () => {
     updateData('testimonials', testimonials);
   };
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
     if(window.confirm("Вы уверены, что хотите сбросить все настройки? Это действие нельзя будет отменить.")) {
-      localStorage.removeItem(APP_STORAGE_KEY);
-      setData(INITIAL_DATA); // Reset to constant data
-      addToast("Все настройки сброшены к начальным.");
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/reset`, { method: 'POST' });
+        if (!response.ok) throw new Error('Failed to reset data on server');
+        const freshData = await response.json();
+        setData(freshData);
+        addToast("Все настройки сброшены к начальным.", 'success');
+      } catch (error) {
+        console.error("Error resetting data:", error);
+        addToast("Ошибка: Не удалось сбросить настройки.", 'error');
+      }
     }
   };
 
@@ -174,12 +179,12 @@ const App: React.FC = () => {
         clients: updatedClients,
     } : null);
     
-    addToast("Новая запись создана!");
+    addToast("Новая запись создана!", 'success');
   };
 
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
+    <div className="flex h-screen bg-background text-text-primary font-body">
       <BuilderSidebar 
         data={data}
         onUpdateHero={updateHero}
@@ -194,14 +199,14 @@ const App: React.FC = () => {
         onReset={handleResetData}
         addToast={addToast}
       />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-4 sm:p-8 bg-gray-200 h-full">
+      <main className="flex-1 overflow-hidden">
+        <div className="p-4 sm:p-6 bg-background h-full">
             <LivePreview data={data} onBookAppointment={handleBookAppointment} />
         </div>
       </main>
       <ToastContainer>
         {toasts.map(toast => (
-          <Toast key={toast.id} message={toast.message} onClose={() => setToasts(t => t.filter(t => t.id !== toast.id))} />
+          <Toast key={toast.id} message={toast.message} type={toast.type} onClose={() => setToasts(t => t.filter(t => t.id !== toast.id))} />
         ))}
       </ToastContainer>
     </div>

@@ -1,4 +1,3 @@
-
 export interface Service {
   id: string;
   name: string;
@@ -24,6 +23,12 @@ export interface HeroData {
     title: string;
     subtitle: string;
     cta: string;
+    backgroundImage: string;
+}
+
+export interface AboutData {
+    text: string;
+    imageUrl: string;
 }
 
 export interface Client {
@@ -64,7 +69,7 @@ export interface Testimonial {
 
 export interface LandingPageData {
   hero: HeroData;
-  about: string;
+  about: AboutData;
   services: Service[];
   portfolio: PortfolioImage[];
   theme: Theme;
