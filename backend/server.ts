@@ -3,7 +3,7 @@ import cors from 'cors';
 import { randomBytes, pbkdf2Sync, randomUUID } from 'crypto';
 import { promises as fs } from 'fs';
 import path from 'path';
-import type { LandingPageData, User } from './types';
+import type { LandingPageData, User, PortfolioImage } from './types';
 import { getInitialData } from './data';
 
 const app: express.Express = express();
@@ -14,9 +14,10 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // ==========================================================================
-// File-based Database Layer
+// File-based Database Layer & Image Storage
 // ==========================================================================
 const DB_PATH = path.join(__dirname, 'db');
+const UPLOADS_PATH = path.join(__dirname, 'uploads');
 const USERS_DB_FILE = path.join(DB_PATH, 'users.json');
 const SITES_DB_FILE = path.join(DB_PATH, 'sites.json');
 
@@ -46,6 +47,7 @@ const writeDbFile = async (filePath: string, data: any) => {
 };
 
 const loadDatabases = async () => {
+    await fs.mkdir(UPLOADS_PATH, { recursive: true });
     const usersData = await readDbFile<User>(USERS_DB_FILE);
     usersDatabase = objectToMap(usersData);
 
@@ -53,6 +55,32 @@ const loadDatabases = async () => {
     userSiteDatabase = objectToMap(sitesData);
     
     console.log('Databases loaded from files into memory.');
+};
+
+const saveBase64Image = async (base64Data: string, userId: string): Promise<string> => {
+    try {
+        const matches = base64Data.match(/^data:(image\/([a-zA-Z]+));base64,(.+)$/);
+        if (!matches || matches.length !== 4) {
+            return base64Data;
+        }
+
+        const extension = matches[2];
+        const base64Image = matches[3];
+        
+        const buffer = Buffer.from(base64Image, 'base64');
+        const filename = `${randomUUID()}.${extension}`;
+        
+        const userUploadsPath = path.join(UPLOADS_PATH, userId);
+        await fs.mkdir(userUploadsPath, { recursive: true });
+        
+        const filePath = path.join(userUploadsPath, filename);
+        await fs.writeFile(filePath, buffer);
+        
+        return `/uploads/${userId}/${filename}`;
+    } catch (error) {
+        console.error('Error saving base64 image:', error);
+        throw new Error("Failed to process and save image.");
+    }
 };
 
 // ==========================================================================
@@ -167,6 +195,21 @@ dataRouter.put('/data', asyncHandler(async (req: Request, res: Response) => {
     return res.status(400).json({ message: 'Invalid data format provided.' });
   }
 
+  // Process images: find base64 strings and replace them with file URLs
+  if (newData.hero.backgroundImage.startsWith('data:image')) {
+    newData.hero.backgroundImage = await saveBase64Image(newData.hero.backgroundImage, userId);
+  }
+  if (newData.about.imageUrl.startsWith('data:image')) {
+    newData.about.imageUrl = await saveBase64Image(newData.about.imageUrl, userId);
+  }
+  newData.portfolio = await Promise.all(newData.portfolio.map(async (img: PortfolioImage) => {
+      if (img.url.startsWith('data:image')) {
+          return { ...img, url: await saveBase64Image(img.url, userId) };
+      }
+      return img;
+  }));
+
+
   userSiteDatabase.set(userId, newData);
   await writeDbFile(SITES_DB_FILE, mapToObject(userSiteDatabase));
 
@@ -192,9 +235,12 @@ const startServer = async () => {
   app.use('/api/auth', authRouter);
   app.use('/api', dataRouter);
 
-  // --- Serve Frontend Application ---
+  // --- Serve Frontend Application & User Uploads ---
   const frontendDir = path.join(__dirname, '..');
-
+  
+  // Serve user-uploaded files
+  app.use('/uploads', express.static(UPLOADS_PATH));
+  
   // Serve all static files from the root directory
   app.use(express.static(frontendDir));
 
