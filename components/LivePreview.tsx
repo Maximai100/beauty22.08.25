@@ -30,7 +30,7 @@ const SocialIcon: React.FC<{ network: 'instagram' | 'telegram' | 'vk', href: str
     };
 
     return (
-        <a href={href} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors duration-300">
+        <a href={href} target="_blank" rel="noopener noreferrer" className="text-current opacity-70 hover:opacity-100 transition-opacity duration-300">
             {icons[network]}
         </a>
     );
@@ -295,7 +295,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({ data, onBookAppointmen
                         {socials.telegram && <SocialIcon network="telegram" href={socials.telegram} />}
                         {socials.vk && <SocialIcon network="vk" href={socials.vk} />}
                      </div>
-                     <p className="text-xs text-gray-400 mt-10">&copy; {new Date().getFullYear()} | Создано с помощью Конструктора сайтов</p>
+                     <p className="text-xs opacity-70 mt-10">&copy; {new Date().getFullYear()} | Создано с помощью Конструктора сайтов</p>
                 </div>
             </footer>
         </div>

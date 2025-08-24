@@ -5,7 +5,7 @@ import type { LandingPageData, Service, PortfolioImage, Appointment, Client, Con
 import { INITIAL_DATA } from './constants';
 import { ToastContainer, Toast } from './components/Toast';
 
-const BACKEND_URL = ''; // Используем относительные пути для API запросов
+const BACKEND_URL = 'http://localhost:3001'; // URL for the backend server
 
 type ToastType = 'success' | 'error';
 
@@ -199,8 +199,8 @@ const App: React.FC = () => {
         onReset={handleResetData}
         addToast={addToast}
       />
-      <main className="flex-1 overflow-hidden">
-        <div className="p-4 sm:p-6 bg-background h-full">
+      <main className="flex-1 overflow-x-auto">
+        <div className="p-4 sm:p-6 bg-background h-full" style={{minWidth: '420px'}}>
             <LivePreview data={data} onBookAppointment={handleBookAppointment} />
         </div>
       </main>
