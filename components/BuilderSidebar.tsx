@@ -244,7 +244,7 @@ const ContentEditor: React.FC<{ data: LandingPageData, onUpdateHero: (field: key
     );
 };
 
-const ServiceEditor: React.FC<{ services: Service[], onUpdateServices: (services: Service[]) => void, onGenerateDescription: (index: number, name: string) => void; generatingIndex: number | null; }> = ({ services, onUpdateServices, onGenerateDescription, generatingIndex }) => {
+const ServiceEditor: React.FC<{ services: Service[], onUpdateServices: (services: Service[]) => void, onGenerateDescription: (index: number, name: string) => void; generatingIndex: number | null; }> = ({ services = [], onUpdateServices, onGenerateDescription, generatingIndex }) => {
   const handleUpdate = (index: number, field: keyof Service, value: string | number) => {
     const newServices = [...services];
     // @ts-ignore
@@ -294,7 +294,7 @@ const ServiceEditor: React.FC<{ services: Service[], onUpdateServices: (services
   );
 };
 
-const PortfolioEditor: React.FC<{ portfolio: PortfolioImage[], onUpdatePortfolio: (images: PortfolioImage[]) => void, addToast: (message: string, type?: 'success' | 'error') => void }> = ({ portfolio, onUpdatePortfolio, addToast }) => {
+const PortfolioEditor: React.FC<{ portfolio: PortfolioImage[], onUpdatePortfolio: (images: PortfolioImage[]) => void, addToast: (message: string, type?: 'success' | 'error') => void }> = ({ portfolio = [], onUpdatePortfolio, addToast }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -405,7 +405,7 @@ const ContactEditor: React.FC<{ contact: ContactData, socials: SocialData, onUpd
     );
 };
 
-const BookingManager: React.FC<{ appointments: Appointment[], onUpdateAppointments: (appointments: Appointment[]) => void, services: Service[], addToast: (message: string, type?: 'success' | 'error') => void }> = ({ appointments, onUpdateAppointments, services, addToast }) => {
+const BookingManager: React.FC<{ appointments: Appointment[], onUpdateAppointments: (appointments: Appointment[]) => void, services: Service[], addToast: (message: string, type?: 'success' | 'error') => void }> = ({ appointments = [], onUpdateAppointments, services = [], addToast }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const initialFormState = {
         clientName: '',
@@ -504,7 +504,7 @@ const BookingManager: React.FC<{ appointments: Appointment[], onUpdateAppointmen
     );
 };
 
-const CrmManager: React.FC<{ clients: Client[], onUpdateClients: (clients: Client[]) => void, addToast: (message: string, type?: 'success' | 'error') => void }> = ({ clients, onUpdateClients, addToast }) => {
+const CrmManager: React.FC<{ clients: Client[], onUpdateClients: (clients: Client[]) => void, addToast: (message: string, type?: 'success' | 'error') => void }> = ({ clients = [], onUpdateClients, addToast }) => {
     const emptyClient: Omit<Client, 'id' | 'visitHistory'> = { name: '', phone: '', email: '', notes: '' };
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | Omit<Client, 'id' | 'visitHistory'>>(emptyClient);
@@ -624,7 +624,7 @@ const CrmManager: React.FC<{ clients: Client[], onUpdateClients: (clients: Clien
     );
 };
 
-const TestimonialEditor: React.FC<{ testimonials: Testimonial[], onUpdateTestimonials: (testimonials: Testimonial[]) => void, addToast: (message: string, type?: 'success' | 'error') => void }> = ({ testimonials, onUpdateTestimonials, addToast }) => {
+const TestimonialEditor: React.FC<{ testimonials: Testimonial[], onUpdateTestimonials: (testimonials: Testimonial[]) => void, addToast: (message: string, type?: 'success' | 'error') => void }> = ({ testimonials = [], onUpdateTestimonials, addToast }) => {
     const emptyTestimonial: Omit<Testimonial, 'id'> = { clientName: '', text: '', rating: 5 };
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | Omit<Testimonial, 'id'>>(emptyTestimonial);
