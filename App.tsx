@@ -4,12 +4,12 @@ import { LivePreview } from './components/LivePreview';
 import type { LandingPageData, Service, PortfolioImage, Appointment, Client, ContactData, SocialData, Testimonial, HeroData, AboutData } from './types';
 import { INITIAL_DATA } from './constants';
 import { ToastContainer, Toast } from './components/Toast';
-
-const BACKEND_URL = 'http://localhost:3001'; // URL for the backend server
+import { AuthPage } from './components/AuthPage';
 
 type ToastType = 'success' | 'error';
 
 const App: React.FC = () => {
+  const [userId, setUserId] = useState<string | null>(() => localStorage.getItem('userId'));
   const [data, setData] = useState<LandingPageData | null>(null);
   const [toasts, setToasts] = useState<{ id: number; message: string; type: ToastType }[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -19,14 +19,33 @@ const App: React.FC = () => {
     setToasts(prevToasts => [...prevToasts, { id, message, type }]);
     setTimeout(() => {
       setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
-    }, 5000); // Увеличено время отображения для ошибок
+    }, 5000);
   }, []);
+
+  const handleLoginSuccess = (newUserId: string) => {
+    localStorage.setItem('userId', newUserId);
+    setUserId(newUserId);
+    setData(null); // Reset data to trigger refetch for the new user
+    setIsInitialLoad(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('userId');
+    setUserId(null);
+    setData(null);
+  };
 
   // Effect for initial data loading from server
   useEffect(() => {
+    if (!userId) return;
+
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/api/data`);
+        const response = await fetch(`/api/data`, {
+          headers: {
+            'X-User-ID': userId
+          }
+        });
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
@@ -42,20 +61,21 @@ const App: React.FC = () => {
       }
     };
     fetchData();
-  }, [addToast]);
+  }, [addToast, userId]);
 
   // Effect for saving data to server
   useEffect(() => {
-    if (isInitialLoad || !data) {
+    if (isInitialLoad || !data || !userId) {
         return;
     }
     
     const handler = setTimeout(async () => {
       try {
-        const response = await fetch(`${BACKEND_URL}/api/data`, {
+        const response = await fetch(`/api/data`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'X-User-ID': userId,
             },
             body: JSON.stringify(data),
         });
@@ -67,20 +87,32 @@ const App: React.FC = () => {
           const errorMessage = error instanceof Error ? error.message : 'Неизвестная сетевая ошибка.';
           addToast(`Ошибка сохранения: ${errorMessage}`, 'error');
       }
-    }, 1000); // Debounce save requests
+    }, 1000);
 
     return () => {
         clearTimeout(handler);
     };
-  }, [data, isInitialLoad, addToast]);
+  }, [data, isInitialLoad, addToast, userId]);
 
+  if (!userId) {
+    return (
+      <>
+        <AuthPage onLoginSuccess={handleLoginSuccess} />
+        <ToastContainer>
+          {toasts.map(toast => (
+            <Toast key={toast.id} message={toast.message} type={toast.type} onClose={() => setToasts(t => t.filter(t => t.id !== toast.id))} />
+          ))}
+        </ToastContainer>
+      </>
+    );
+  }
   
   if (!data) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="text-center">
           <svg className="mx-auto h-12 w-12 animate-spin text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <h2 className="mt-4 text-xl font-semibold text-text-primary font-heading">Загрузка конструктора...</h2>
+          <h2 className="mt-4 text-xl font-semibold text-text-primary font-heading">Загрузка данных пользователя...</h2>
         </div>
       </div>
     );
@@ -130,7 +162,12 @@ const App: React.FC = () => {
   const handleResetData = async () => {
     if(window.confirm("Вы уверены, что хотите сбросить все настройки? Это действие нельзя будет отменить.")) {
       try {
-        const response = await fetch(`${BACKEND_URL}/api/reset`, { method: 'POST' });
+        const response = await fetch(`/api/reset`, { 
+            method: 'POST',
+            headers: {
+                'X-User-ID': userId,
+            }
+        });
         if (!response.ok) throw new Error('Failed to reset data on server');
         const freshData = await response.json();
         setData(freshData);
@@ -159,7 +196,7 @@ const App: React.FC = () => {
         const existingClient = updatedClients[clientIndex];
         updatedClients[clientIndex] = {
             ...existingClient,
-            visitHistory: [...existingClient.visitHistory, new Date(details.date)]
+            visitHistory: [...existingClient.visitHistory, new Date(details.date).toISOString()]
         };
     } else {
         const newClient: Client = {
@@ -168,7 +205,7 @@ const App: React.FC = () => {
             phone: '',
             email: '',
             notes: 'Создан автоматически через форму записи.',
-            visitHistory: [new Date(details.date)],
+            visitHistory: [new Date(details.date).toISOString()],
         };
         updatedClients.push(newClient);
     }
@@ -181,7 +218,6 @@ const App: React.FC = () => {
     
     addToast("Новая запись создана!", 'success');
   };
-
 
   return (
     <div className="flex h-screen bg-background text-text-primary font-body">
@@ -198,6 +234,7 @@ const App: React.FC = () => {
         onUpdateTestimonials={updateTestimonials}
         onReset={handleResetData}
         addToast={addToast}
+        onLogout={handleLogout}
       />
       <main className="flex-1 overflow-x-auto">
         <div className="p-4 sm:p-6 bg-background h-full" style={{minWidth: '420px'}}>

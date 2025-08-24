@@ -1,184 +1,223 @@
-import express from 'express';
-import type { Express, Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import * as crypto from 'crypto';
+import { randomBytes, pbkdf2Sync, randomUUID } from 'crypto';
+import { promises as fs } from 'fs';
+import path from 'path';
+import type { LandingPageData, User } from './types';
+import { getInitialData } from './data';
 
-// --- Type Definitions (from frontend/types.ts) ---
-export interface Service {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  duration: number; // in minutes
-}
-
-export interface PortfolioImage {
-  id: string;
-  url: string;
-  alt: string;
-}
-
-export interface Theme {
-  primary: string;
-  background: string;
-  text: string;
-  card: string;
-}
-
-export interface HeroData {
-    title: string;
-    subtitle: string;
-    cta: string;
-    backgroundImage: string;
-}
-
-export interface AboutData {
-    text: string;
-    imageUrl: string;
-}
-
-export interface Client {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  notes: string;
-  visitHistory: Date[];
-}
-
-export interface Appointment {
-  id: string;
-  clientName: string;
-  serviceName: string;
-  date: string; // ISO string
-  time: string; // HH:mm
-}
-
-export interface SocialData {
-    instagram: string;
-    telegram: string;
-    vk: string;
-}
-
-export interface ContactData {
-    address: string;
-    phone: string;
-    email: string;
-}
-
-export interface Testimonial {
-  id: string;
-  clientName: string;
-  text: string;
-  rating: number; // 1 to 5
-}
-
-export interface LandingPageData {
-  hero: HeroData;
-  about: AboutData;
-  services: Service[];
-  portfolio: PortfolioImage[];
-  theme: Theme;
-  appointments: Appointment[];
-  clients: Client[];
-  contact: ContactData;
-  socials: SocialData;
-  testimonials: Testimonial[];
-}
-
-// --- Initial Data (from frontend/constants.ts) ---
-const getInitialData = (): LandingPageData => ({
-  hero: {
-    title: "Студия красоты Анны",
-    subtitle: "Эксперт по макияжу и нейл-арту",
-    cta: "Записаться",
-    backgroundImage: 'https://picsum.photos/seed/bg/1200/800',
-  },
-  about: {
-    text: "Имея более 10 лет опыта в индустрии красоты, я посвящаю себя предоставлению высококачественных услуг, которые помогут вам почувствовать себя красивыми и уверенными. Моя студия — это место релаксации и преображения. Я специализируюсь на свадебном макияже, креативном нейл-арте и персональных консультациях по уходу за кожей.",
-    imageUrl: 'https://picsum.photos/seed/master/400/400',
-  },
-  services: [
-    { id: '1', name: 'Классический маникюр', description: 'Вечная классика для красивых ногтей.', price: 1500, duration: 60 },
-    { id: '2', name: 'Гелевый педикюр', description: 'Долговечный цвет и блеск для ваших ногтей.', price: 2500, duration: 75 },
-    { id: '3', name: 'Свадебный макияж', description: 'Выглядите сногсшибательно в ваш особенный день.', price: 5000, duration: 120 },
-    { id: '4', name: "Ламинирование ресниц", description: "Подчеркните красоту ваших натуральных ресниц.", price: 2000, duration: 60 },
-  ],
-  portfolio: [
-    { id: '1', url: 'https://picsum.photos/seed/makeup1/600/400', alt: 'Элегантный макияж' },
-    { id: '2', url: 'https://picsum.photos/seed/nails1/600/400', alt: 'Сложный нейл-арт' },
-    { id: '3', url: 'https://picsum.photos/seed/bride/600/400', alt: 'Свадебный образ' },
-    { id: '4', url: 'https://picsum.photos/seed/nails2/600/400', alt: 'Гелевый дизайн ногтей' },
-  ],
-  theme: {
-    primary: '#D946EF', // fuchsia-500
-    background: '#FFFFFF', // white
-    text: '#1F2937', // gray-800
-    card: '#F9FAFB' // gray-50
-  },
-  appointments: [
-    { id: '1', clientName: 'Анна Иванова', serviceName: 'Классический маникюр', date: new Date().toISOString().split('T')[0], time: '10:00' },
-    { id: '2', clientName: 'Елена Смирнова', serviceName: 'Свадебный макияж', date: new Date(Date.now() + 86400000).toISOString().split('T')[0], time: '14:30' },
-  ],
-  clients: [
-    { id: '1', name: 'Анна Иванова', phone: '+7-912-345-67-89', email: 'anna.i@example.com', notes: 'Предпочитает светло-розовый лак.', visitHistory: [new Date()] },
-    { id: '2', name: 'Елена Смирнова', phone: '+7-923-456-78-90', email: 'elena.s@example.com', notes: 'Аллергия на латекс.', visitHistory: [new Date(Date.now() - 86400000 * 10)] },
-  ],
-  contact: {
-    address: 'г. Москва, ул. Красивая, д. 15',
-    phone: '+7 (495) 123-45-67',
-    email: 'hello@annabeauty.com'
-  },
-  socials: {
-    instagram: 'https://instagram.com',
-    telegram: 'https://t.me',
-    vk: 'https://vk.com'
-  },
-  testimonials: [
-    { id: 't1', clientName: 'Мария К.', text: 'Анна - настоящий профессионал! Мой свадебный макияж был безупречен и держался весь день. Огромное спасибо!', rating: 5 },
-    { id: 't2', clientName: 'Светлана В.', text: 'Всегда делаю маникюр только здесь. Ногти выглядят идеально, а атмосфера в студии очень расслабляет.', rating: 5 },
-    { id: 't3', clientName: 'Екатерина П.', text: 'Очень довольна ламинированием ресниц. Эффект потрясающий, взгляд стал более открытым и выразительным.', rating: 4 },
-  ]
-});
-
-
-const app: Express = express();
-const PORT = 3001;
+const app: express.Express = express();
+const PORT = process.env.PORT || 3001;
 
 // Middlewares
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); // Increase limit for base64 images
+app.use(express.json({ limit: '10mb' }));
 
-// In-memory "database"
-let siteData: LandingPageData = getInitialData();
+// ==========================================================================
+// File-based Database Layer
+// ==========================================================================
+const DB_PATH = path.join(__dirname, 'db');
+const USERS_DB_FILE = path.join(DB_PATH, 'users.json');
+const SITES_DB_FILE = path.join(DB_PATH, 'sites.json');
 
-// --- API Endpoints ---
+// In-memory cache, populated from files on start
+let userSiteDatabase = new Map<string, LandingPageData>();
+let usersDatabase = new Map<string, User>(); // Stores users by email
 
-// GET /api/data - Retrieve current site data
-app.get('/api/data', (req: Request, res: Response) => {
-  res.json(siteData);
+const mapToObject = <T>(map: Map<string, T>): { [key: string]: T } => Object.fromEntries(map.entries());
+const objectToMap = <T>(obj: { [key: string]: T }): Map<string, T> => new Map(Object.entries(obj));
+
+const readDbFile = async <T>(filePath: string): Promise<{ [key: string]: T }> => {
+  try {
+    await fs.access(filePath);
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error: any) {
+    if (error.code === 'ENOENT') {
+      return {}; // File doesn't exist, return empty object
+    }
+    throw error;
+  }
+};
+
+const writeDbFile = async (filePath: string, data: any) => {
+  await fs.mkdir(DB_PATH, { recursive: true });
+  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+};
+
+const loadDatabases = async () => {
+    const usersData = await readDbFile<User>(USERS_DB_FILE);
+    usersDatabase = objectToMap(usersData);
+
+    const sitesData = await readDbFile<LandingPageData>(SITES_DB_FILE);
+    userSiteDatabase = objectToMap(sitesData);
+    
+    console.log('Databases loaded from files into memory.');
+};
+
+// ==========================================================================
+// Security / Hashing
+// ==========================================================================
+const hashPassword = (password: string, salt: string): string => {
+  return pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+};
+
+// ==========================================================================
+// Error Handling Utilities
+// ==========================================================================
+const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => 
+  (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+// ==========================================================================
+// Middleware
+// ==========================================================================
+const extractUser = (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.headers['x-user-id'];
+  if (!userId || typeof userId !== 'string') {
+    return res.status(401).json({ message: 'Unauthorized: User ID is missing.' });
+  }
+  res.locals.userId = userId;
+  next();
+};
+
+// ==========================================================================
+// API Routes
+// ==========================================================================
+
+// --- Auth Routes ---
+const authRouter = express.Router();
+
+authRouter.post('/register', asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
+
+  if (usersDatabase.has(email)) {
+    return res.status(409).json({ message: 'User with this email already exists.' });
+  }
+
+  const userId = randomUUID();
+  const salt = randomBytes(16).toString('hex');
+  const hashedPassword = hashPassword(password, salt);
+
+  const newUser: User = { id: userId, email, salt, hashedPassword };
+
+  usersDatabase.set(email, newUser);
+  const initialData = getInitialData();
+  userSiteDatabase.set(userId, initialData);
+
+  // Persist changes to files
+  await Promise.all([
+    writeDbFile(USERS_DB_FILE, mapToObject(usersDatabase)),
+    writeDbFile(SITES_DB_FILE, mapToObject(userSiteDatabase))
+  ]);
+
+  console.log(`New user registered and data saved: ${email}`);
+  res.status(201).json({ id: newUser.id, email: newUser.email });
+}));
+
+authRouter.post('/login', (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required.' });
+    }
+
+    const user = usersDatabase.get(email);
+    if (!user) {
+        return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    const isPasswordCorrect = hashPassword(password, user.salt) === user.hashedPassword;
+    if (!isPasswordCorrect) {
+        return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+
+    console.log(`User logged in: ${email}`);
+    res.status(200).json({ id: user.id, email: user.email });
 });
 
-// PUT /api/data - Update site data
-app.put('/api/data', (req: Request, res: Response) => {
+
+// --- Data Routes ---
+const dataRouter = express.Router();
+dataRouter.use(extractUser);
+
+dataRouter.get('/data', (req: Request, res: Response) => {
+  const userId = res.locals.userId;
+  
+  if (!userSiteDatabase.has(userId)) {
+    console.log(`First login for user ${userId}. Creating initial data set.`);
+    const initialData = getInitialData();
+    userSiteDatabase.set(userId, initialData);
+    // Persist this new user's default data, but don't wait for it
+    writeDbFile(SITES_DB_FILE, mapToObject(userSiteDatabase))
+        .catch(err => console.error("Failed to save initial data for new user:", err));
+  }
+
+  res.json(userSiteDatabase.get(userId));
+});
+
+dataRouter.put('/data', asyncHandler(async (req: Request, res: Response) => {
+  const userId = res.locals.userId;
   const newData = req.body as LandingPageData;
-  // Basic validation could be added here
+  
   if (!newData || !newData.hero || !newData.services) {
     return res.status(400).json({ message: 'Invalid data format provided.' });
   }
-  siteData = newData;
-  console.log('Data updated successfully.');
+
+  userSiteDatabase.set(userId, newData);
+  await writeDbFile(SITES_DB_FILE, mapToObject(userSiteDatabase));
+
+  console.log(`Data updated and saved successfully for user ${userId}.`);
   res.status(200).json({ message: 'Data updated successfully' });
-});
+}));
 
-// POST /api/reset - Reset data to initial state
-app.post('/api/reset', (req: Request, res: Response) => {
-  siteData = getInitialData();
-  console.log('Data has been reset to initial state.');
-  res.json(siteData);
-});
+dataRouter.post('/reset', asyncHandler(async (req: Request, res: Response) => {
+  const userId = res.locals.userId;
+  const initialData = getInitialData();
+  userSiteDatabase.set(userId, initialData);
+  await writeDbFile(SITES_DB_FILE, mapToObject(userSiteDatabase));
 
+  console.log(`Data for user ${userId} has been reset and saved.`);
+  res.json(initialData);
+}));
 
-app.listen(PORT, () => {
-  console.log(`Backend server is running on http://localhost:${PORT}`);
+// --- Server Startup ---
+const startServer = async () => {
+  await loadDatabases();
+  
+  // Mount the API routers first
+  app.use('/api/auth', authRouter);
+  app.use('/api', dataRouter);
+
+  // --- Serve Frontend Application ---
+  const frontendDir = path.join(__dirname, '..');
+
+  // Serve all static files from the root directory
+  app.use(express.static(frontendDir));
+
+  // For any other GET request, send the index.html file
+  // This is required for a Single Page Application (SPA) to work correctly with client-side routing
+  app.get('*', (req: Request, res: Response) => {
+    res.sendFile(path.join(frontendDir, 'index.html'));
+  });
+  
+  // Global Error Handler
+  // This should be the last middleware
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error('An unhandled error occurred:', err.stack);
+    res.status(500).json({ message: 'An internal server error occurred.' });
+  });
+
+  app.listen(PORT, () => {
+    console.log(`Server is now running on http://localhost:${PORT}`);
+    console.log('Serving both backend API and frontend application.');
+  });
+};
+
+startServer().catch(err => {
+    console.error("Failed to start server:", err);
+    process.exit(1);
 });

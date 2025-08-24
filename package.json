@@ -14,7 +14,10 @@
     "@google/genai": "latest",
     "express": "^5.1.0",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1"
+    "crypto": "^1.0.1",
+    "path": "^0.12.7",
+    "fs": "^0.0.1-security",
+    "process": "^0.11.10"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

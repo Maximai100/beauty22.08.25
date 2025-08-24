@@ -1,6 +1,7 @@
-import type { LandingPageData, Theme, Testimonial } from './types';
+import type { LandingPageData } from './types';
 
-export const INITIAL_DATA: LandingPageData = {
+// --- Initial Data (from frontend/constants.ts) ---
+export const getInitialData = (): LandingPageData => ({
   hero: {
     title: "Студия красоты Анны",
     subtitle: "Эксперт по макияжу и нейл-арту",
@@ -52,13 +53,4 @@ export const INITIAL_DATA: LandingPageData = {
     { id: 't2', clientName: 'Светлана В.', text: 'Всегда делаю маникюр только здесь. Ногти выглядят идеально, а атмосфера в студии очень расслабляет.', rating: 5 },
     { id: 't3', clientName: 'Екатерина П.', text: 'Очень довольна ламинированием ресниц. Эффект потрясающий, взгляд стал более открытым и выразительным.', rating: 4 },
   ]
-};
-
-export const THEME_PRESETS: { name: string, theme: Theme }[] = [
-    { name: 'Сияние фуксии', theme: { primary: '#D946EF', background: '#FFFFFF', text: '#1F2937', card: '#F9FAFB' } },
-    { name: 'Лепесток розы', theme: { primary: '#F472B6', background: '#FEF2F2', text: '#881337', card: '#FFFFFF' } },
-    { name: 'Мятная свежесть', theme: { primary: '#10B981', background: '#F0FDFA', text: '#064E3B', card: '#FFFFFF' } },
-    { name: 'Лавандовая мечта', theme: { primary: '#8B5CF6', background: '#F5F3FF', text: '#4C1D95', card: '#FFFFFF' } },
-    { name: 'Золотой час', theme: { primary: '#F59E0B', background: '#FFFBEB', text: '#78350F', card: '#FFFFFF' } },
-    { name: 'Океанский бриз', theme: { primary: '#3B82F6', background: '#EFF6FF', text: '#1E3A8A', card: '#FFFFFF' } },
-];
+});

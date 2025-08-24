@@ -1,3 +1,12 @@
+// --- Type Definitions (from frontend/types.ts) ---
+
+export interface User {
+  id: string;
+  email: string;
+  salt: string;
+  hashedPassword: string;
+}
+
 export interface Service {
   id: string;
   name: string;

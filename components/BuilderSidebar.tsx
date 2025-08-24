@@ -29,6 +29,7 @@ const TestimonialIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className=
 const MagicWandIcon = ({className = "h-4 w-4"}) => <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path d="M11.94 2.06c-.28-.56-1.03-.56-1.3 0L9.42 4.4c-.1.2-.27.34-.47.42l-2.6.98c-.6.22-.84.98-.42 1.4L7.8 8.8c.16.16.22.39.16.6l-.97 2.62c-.22.6.54.96 1.1.56l2.3-1.58c.18-.12.4-.12.58 0l2.3 1.58c.57.4 1.32.04 1.1-.56l-.97-2.62a.74.74 0 01.16-.6l1.87-1.6c.42-.42.18-1.18-.42-1.4l-2.6-.98a.74.74 0 01-.47-.42L11.94 2.06zM5 14a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" /></svg>;
 const Spinner = ({className = "h-4 w-4"}) => <svg className={`animate-spin ${className}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
 const ResetIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.004 9.057a1 1 0 011.272.728A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h4a1 1 0 011 1v4a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.728-1.272z" clipRule="evenodd" /></svg>;
+const LogoutIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>;
 const StarIcon = ({ filled, onClick, onMouseEnter, onMouseLeave }: { filled: boolean; onClick?: () => void; onMouseEnter?: () => void; onMouseLeave?: () => void; }) => (
     <svg onClick={onClick} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 cursor-pointer ${filled ? 'text-yellow-400' : 'text-gray-300'}`} viewBox="0 0 20 20" fill="currentColor">
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -50,6 +51,7 @@ interface BuilderSidebarProps {
   onUpdateContactAndSocials: (contact: ContactData, socials: SocialData) => void;
   onUpdateTestimonials: (testimonials: Testimonial[]) => void;
   onReset: () => void;
+  onLogout: () => void;
   addToast: (message: string, type?: 'success' | 'error') => void;
 }
 
@@ -74,7 +76,7 @@ const TabButton: React.FC<TabButtonProps> = ({ tab, icon, children, activeTab, o
 );
 
 export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
-  data, onUpdateHero, onUpdateAbout, onUpdateServices, onUpdatePortfolio, onUpdateTheme, onUpdateAppointments, onUpdateClients, onUpdateContactAndSocials, onUpdateTestimonials, onReset, addToast
+  data, onUpdateHero, onUpdateAbout, onUpdateServices, onUpdatePortfolio, onUpdateTheme, onUpdateAppointments, onUpdateClients, onUpdateContactAndSocials, onUpdateTestimonials, onReset, onLogout, addToast
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('content');
   const [isGeneratingAbout, setIsGeneratingAbout] = useState(false);
@@ -158,12 +160,18 @@ export const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
         {activeTab === 'bookings' && <BookingManager appointments={data.appointments} onUpdateAppointments={onUpdateAppointments} services={data.services} addToast={addToast} />}
         {activeTab === 'crm' && <CrmManager clients={data.clients} onUpdateClients={onUpdateClients} addToast={addToast} />}
       </div>
-       <div className="p-4 border-t border-border text-xs text-text-secondary bg-card">
-        <button onClick={onReset} className="w-full mb-2 flex items-center justify-center py-2 px-4 border border-border rounded-component text-sm font-medium text-text-secondary hover:bg-background hover:text-text-primary transition-all duration-300 ease-smooth">
-            <ResetIcon />
-            Сбросить настройки
-        </button>
-        <p className="text-center">Конструктор сайтов v1.5 (Elegant UI)</p>
+       <div className="p-4 border-t border-border bg-card">
+        <div className="flex space-x-2 text-xs text-text-secondary">
+            <button onClick={onReset} className="flex-1 flex items-center justify-center py-2 px-2 border border-border rounded-component text-sm font-medium text-text-secondary hover:bg-background hover:text-text-primary transition-all duration-300 ease-smooth">
+                <ResetIcon />
+                Сбросить
+            </button>
+             <button onClick={onLogout} className="flex-1 flex items-center justify-center py-2 px-2 border border-border rounded-component text-sm font-medium text-text-secondary hover:bg-background hover:text-text-primary transition-all duration-300 ease-smooth">
+                <LogoutIcon />
+                Выйти
+            </button>
+        </div>
+        <p className="text-center text-xs text-text-secondary/80 mt-3">Конструктор сайтов v1.6 (SaaS Ready)</p>
       </div>
     </aside>
   );
